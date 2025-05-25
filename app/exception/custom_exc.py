@@ -13,7 +13,7 @@ class InvalidMarkException(RuntimeError):
 class ItemNotFoundException(RuntimeError):
 
     __DEFAULT_ERR_MSG = 'Item not found'
-    __DEFAULT_STUDENT_ERR_MSG = 'Student with slug {} not found.'
+    __DEFAULT_STUDENT_ERR_MSG = 'Student not found.'
     __DEFAULT_LEARNING_RESULT_ERR_MSG = 'Learning Result of Student with slug {} not found.'
 
     def __init__(self, message: str):
@@ -24,9 +24,8 @@ class ItemNotFoundException(RuntimeError):
         return ItemNotFoundException(ItemNotFoundException.__DEFAULT_ERR_MSG)
 
     @staticmethod
-    def student(slug: str):
-        return ItemNotFoundException(
-            ItemNotFoundException.__DEFAULT_STUDENT_ERR_MSG.format(slug))
+    def student():
+        return ItemNotFoundException(ItemNotFoundException.__DEFAULT_STUDENT_ERR_MSG)
 
     @staticmethod
     def learning_result(slug: str):

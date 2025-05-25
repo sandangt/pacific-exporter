@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Any
 from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError
@@ -39,6 +39,16 @@ class LearningResultRepository:
             item = session.get(LearningResult, id)
             session.expunge_all()
         return item
+
+    def get_multiple_by_student_id(self, student_id: UUID, order_by: OrderByParams) -> list[type[LearningResult]]:
+        direction, order_by_property = order_by.model_dump()
+        with self._db_session.begin() as session:
+            items = session.query(LearningResult) \
+                .filter_by(student_id=student_id) \
+                .order_by(direction(getattr(LearningResult, order_by_property))) \
+                .all()
+            session.expunge_all()
+        return items
 
     def create(self, item: LearningResult):
         with self._db_session.begin() as session:

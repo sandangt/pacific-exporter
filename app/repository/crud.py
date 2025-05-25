@@ -1,7 +1,6 @@
 from typing import TypeVar, Generic, List, Optional, Type
-from uuid import UUID
 
-from sqlalchemy import func
+from sqlalchemy import func, UUID
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker, Session
 
