@@ -1,8 +1,11 @@
+from datetime import datetime
+from typing import Any
+
 from app.exception.custom_exc import InvalidMarkException
 
 
 def make_student_slug(class_code: str, name: str):
-    return name + '\t' + '|' '\t' + class_code
+    return class_code + '\t' + '|' '\t' + name
 
 def map_grade(mark: float) -> str:
     match mark:
@@ -16,3 +19,14 @@ def map_grade(mark: float) -> str:
             return 'D'
         case _:
             raise InvalidMarkException.default()
+
+def parse_mark(mark: Any) -> float:
+    if isinstance(mark, datetime):
+        return float(str(mark.day) + '.' + str(mark.month))
+    return float(mark)
+
+def parse_subject(cell: str) -> str:
+    return cell.split(':')[1].strip()
+
+def parse_teacher(cell: str) -> str:
+    return cell.split(':')[1].strip()

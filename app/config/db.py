@@ -10,4 +10,4 @@ def init_db_config() -> Tuple[Engine, sessionmaker[Session]]:
         'sqlite:///./.tmp/data.db',
         connect_args={'check_same_thread': False}
     )
-    return engine, sessionmaker(bind=engine, autocommit=False, autofush=False)
+    return engine, sessionmaker(bind=engine, autocommit=False, autoflush=False)

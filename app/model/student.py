@@ -5,10 +5,10 @@ from sqlalchemy.orm import mapped_column, relationship
 from sqlalchemy.orm.attributes import Mapped
 from sqlalchemy.sql.sqltypes import String, UUID, TEXT, Integer
 
-from app.model.base import BaseModel
+from app.model.base import BaseEntity
 
 
-class Student(BaseModel):
+class Student(BaseEntity):
     __tablename__ = 'student'
     id = mapped_column(UUID, primary_key=True, default=uuid.uuid1)
     slug = mapped_column(String, unique=True, nullable=False)

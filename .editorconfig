@@ -9,6 +9,5 @@ max_line_length = 120
 trim_trailing_whitespace = true
 indent_size = 2
 
-[*.{py,proto}]
+[*.py]
 indent_size = 4
-
