@@ -1,0 +1,19 @@
+.direnv/
+__pycache__/
+.ipynb_checkpoints/
+build/
+dist/
+dist-ssr
+*.local
+.coverage
+*.log
+.tmp/
+out/
+
+# Editor
+.idea/
+.vscode/
+*~
+*.swp
+
+
