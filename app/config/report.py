@@ -7,5 +7,5 @@ from app.constant import REPORT_TEMPLATE
 
 def get_report_template() -> Template:
     template_path = Path(REPORT_TEMPLATE)
-    env = Environment(loader=FileSystemLoader(Path('resources', 'templates')))
+    env = Environment(loader=FileSystemLoader(template_path.parent))
     return env.get_template(template_path.name)

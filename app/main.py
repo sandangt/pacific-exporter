@@ -51,7 +51,7 @@ def main():
         target_files.extend([os.path.join(root, x) for x in files if x.endswith(XLSX_EXTENSION)])
     for file_path in target_files:
         persist_service.import_workbook(file_path)
-    export_service.print_report()
+    export_service.generate_report()
     clean_up()
 
 if __name__ == '__main__':
