@@ -8,10 +8,10 @@
       margin: 15mm 12mm 15mm 12mm; /* top, right, bottom, left */
     }
     body {
-      font-family: sans-serif;
+      font-family:'Calibri', sans-serif;
       padding: 20px;
     }
-    h1, h2 { text-align: center; }
+    .title { text-align: center; }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -29,10 +29,18 @@
       bottom: 30px;
       right: 30px;
       text-align: right;
+      max-width: 100%
+    }
+    .footer-content {
+      text-align: center;
+      display: inline-block;
+    }
+    .date {
+      margin-bottom: 10em;
+      white-space: nowrap;
     }
     .signature {
-      display: inline-block;
-      text-align: center;
+      white-space: nowrap;
     }
     .page-break {
       page-break-before: always;
@@ -40,8 +48,8 @@
   </style>
 </head>
 <body>
-  <h1>BILINGUAL PROGRAM REPORT</h1>
-  <h2>{{ semester_title }}</h2>
+  <h1 class="title">BILINGUAL PROGRAM REPORT</h1>
+  <h2 class="title">{{ semester_title }}</h2>
 
   <p>Student's name: {{ student_name }}<br>
      Class: {{ class_code }}</p>
@@ -85,10 +93,12 @@
   </div>
 
   <div class="footer">
-    <p>{{ today }}
-    <div class="signature">
-      <p><strong>{{ program_manager }}</strong></p>
-      <p>ENGLISH BILINGUAL PROGRAM MANAGER</p>
+    <div class="footer-content">
+      <p class="date">{{ today }}</p>
+      <div class="signature">
+        <p><strong>{{ program_manager }}</strong></p>
+        <p>ENGLISH BILINGUAL PROGRAM MANAGER</p>
+      </div>
     </div>
   </div>
 

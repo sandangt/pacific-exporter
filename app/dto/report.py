@@ -6,7 +6,7 @@ class ReportComment(BaseModel):
     teacher: str
     text: str
 
-class ReportContext(BaseModel):
+class ReportInfo(BaseModel):
     semester_title: str
     student_name: str
     class_code: str

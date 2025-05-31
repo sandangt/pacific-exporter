@@ -7,7 +7,7 @@ from weasyprint import HTML
 
 from app.constant import PDF_FILE_PATH, TEXT_REPORT_FILE_PATH, PROGRAM_MANAGER
 from app.dto.list_query import PaginationParams, OrderByParams
-from app.dto.report import ReportContext, ReportComment
+from app.dto.report import ReportInfo, ReportComment
 from app.exception.custom_exc import ItemNotFoundException
 from app.repository import StudentRepository, LearningResultRepository
 
@@ -22,7 +22,7 @@ class ExportService:
         self._learning_result_repository = learning_result_repository
         self._report_template = report_template
 
-    def __compile_report_context(self, student_id: UUID) -> ReportContext:
+    def __compile_report_context(self, student_id: UUID) -> ReportInfo:
         student = self._student_repository.get_one_by_id(student_id)
         if not student:
             raise ItemNotFoundException.student()
@@ -34,7 +34,7 @@ class ExportService:
             grades.append(i.grade)
             if i.comment:
                 comments.append(ReportComment(teacher=i.teacher_name, text=i.comment))
-        return ReportContext(
+        return ReportInfo(
             semester_title=student.semester_title,
             student_name=student.name,
             class_code=student.class_code,
