@@ -6,7 +6,7 @@ from pathlib import Path
 from PySide6.QtWidgets import QApplication
 
 from app.config import init_db_config, get_report_template
-from app.constant import TEMP_DIR, RESULT_DIR
+from app.constant import TEMP_DIR
 from app.model import BaseEntity
 from app.repository import StudentRepository, LearningResultRepository
 from app.service import PersistService, ExportService
@@ -16,7 +16,6 @@ from app.main.dto import ApplicationContext
 def __init_context() -> ApplicationContext:
     #region Init file system
     os.makedirs(TEMP_DIR, exist_ok=True)
-    os.makedirs(RESULT_DIR, exist_ok=True)
     #endregion
     #region Init db config
     db_engine, db_session = init_db_config()
@@ -46,7 +45,6 @@ def start_app():
     app_ctx = __init_context()
     app = QApplication(sys.argv)
     main_window = MainWindow(app_ctx)
-    main_window.resize(200, 200)
     main_window.show()
     exit_code = app.exec()
     __clean_up()

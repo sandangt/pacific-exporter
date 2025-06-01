@@ -1,11 +1,12 @@
 import random
 from datetime import date
+from pathlib import Path
 
 from jinja2 import Template
 from sqlalchemy import UUID
 from weasyprint import HTML
 
-from app.constant import PDF_FILE_PATH, TEXT_REPORT_FILE_PATH, PROGRAM_MANAGER
+from app.constant import TEXT_REPORT_FILE_PATH, PROGRAM_MANAGER, FINAL_REPORT_NAME
 from app.dto import PaginationParams, OrderByParams, ReportInfo, ReportComment
 from app.exception import ItemNotFoundException
 from app.repository import StudentRepository, LearningResultRepository
@@ -46,7 +47,7 @@ class ExportService:
             program_manager=random.choice(PROGRAM_MANAGER)
         )
 
-    def generate_report(self):
+    def generate_report(self, output_dir: str):
         order_by = OrderByParams(order='class_code')
         current_offset = 0
         while students := self.__student_repository.get_all(PaginationParams(offset=current_offset, size=100), order_by):
@@ -56,4 +57,4 @@ class ExportService:
                 with open(TEXT_REPORT_FILE_PATH, 'a', encoding='utf-8') as f:
                     f.write(html_content)
             current_offset += 1
-        HTML(TEXT_REPORT_FILE_PATH).write_pdf(PDF_FILE_PATH)
+        HTML(TEXT_REPORT_FILE_PATH).write_pdf(Path(output_dir, FINAL_REPORT_NAME))
