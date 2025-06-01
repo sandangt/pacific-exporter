@@ -6,9 +6,8 @@ from sqlalchemy import UUID
 from weasyprint import HTML
 
 from app.constant import PDF_FILE_PATH, TEXT_REPORT_FILE_PATH, PROGRAM_MANAGER
-from app.dto.list_query import PaginationParams, OrderByParams
-from app.dto.report import ReportInfo, ReportComment
-from app.exception.custom_exc import ItemNotFoundException
+from app.dto import PaginationParams, OrderByParams, ReportInfo, ReportComment
+from app.exception import ItemNotFoundException
 from app.repository import StudentRepository, LearningResultRepository
 
 
@@ -18,12 +17,12 @@ class ExportService:
 
     def __init__(self, student_repository: StudentRepository,
                  learning_result_repository: LearningResultRepository, report_template: Template):
-        self._student_repository = student_repository
-        self._learning_result_repository = learning_result_repository
-        self._report_template = report_template
+        self.__student_repository = student_repository
+        self.__learning_result_repository = learning_result_repository
+        self.__report_template = report_template
 
     def __compile_report_context(self, student_id: UUID) -> ReportInfo:
-        student = self._student_repository.get_one_by_id(student_id)
+        student = self.__student_repository.get_one_by_id(student_id)
         if not student:
             raise ItemNotFoundException.student()
         subjects, teachers, marks, grades, comments = [], [], [], [], []
@@ -50,9 +49,9 @@ class ExportService:
     def generate_report(self):
         order_by = OrderByParams(order='class_code')
         current_offset = 0
-        while students := self._student_repository.get_all(PaginationParams(offset=current_offset, size=100), order_by):
+        while students := self.__student_repository.get_all(PaginationParams(offset=current_offset, size=100), order_by):
             for student in students:
-                html_content = self._report_template.render(**self.__compile_report_context(student.id).model_dump()) \
+                html_content = self.__report_template.render(**self.__compile_report_context(student.id).model_dump()) \
                                + self.__HTML_PAGE_BREAKER
                 with open(TEXT_REPORT_FILE_PATH, 'a', encoding='utf-8') as f:
                     f.write(html_content)

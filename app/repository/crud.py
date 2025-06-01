@@ -4,9 +4,9 @@ from sqlalchemy import func, UUID
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker, Session
 
-from app.dto.list_query import PaginationParams, OrderByParams
-from app.exception.custom_exc import ItemNotFoundException
-from app.model.base import BaseEntity
+from app.dto import PaginationParams, OrderByParams
+from app.exception import ItemNotFoundException
+from app.model import BaseEntity
 
 ModelType = TypeVar('ModelType', bound=BaseEntity)
 

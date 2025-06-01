@@ -1,5 +1,5 @@
-from app.model.student import Student
-from app.repository.crud import CRUDRepository
+from app.model import Student
+from .crud import CRUDRepository
 
 
 class StudentRepository(CRUDRepository[Student]):

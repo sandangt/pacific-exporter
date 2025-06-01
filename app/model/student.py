@@ -3,9 +3,9 @@ from typing import Set
 
 from sqlalchemy.orm import mapped_column, relationship
 from sqlalchemy.orm.attributes import Mapped
-from sqlalchemy.sql.sqltypes import String, UUID, TEXT, Integer
+from sqlalchemy.sql.sqltypes import String, UUID, Integer
 
-from app.model.base import BaseEntity
+from .base import BaseEntity
 
 
 class Student(BaseEntity):

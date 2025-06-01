@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButton, QFileDialog, QHBoxLayout
 
 from app.constant import XLSX_EXTENSION
-from app.view.dto import ApplicationContext
+from app.main.dto import ApplicationContext
 
 
 class MainWindow(QMainWindow):
@@ -53,6 +53,7 @@ class MainWindow(QMainWindow):
         selected_directory = self.__c_file_path.text()
         if selected_directory and selected_directory != self.__DEFAULT_LABEL:
             self.__process()
+            print('DONE')
 
     def __process(self):
         target_files = []

@@ -1,13 +1,12 @@
 from app.repository import StudentRepository, LearningResultRepository
-from app.service import PersistService
-from app.service.export_service import ExportService
+from app.service import PersistService, ExportService
 
 
 class ApplicationContext:
     def __init__(self, student_repository: StudentRepository,
                         learning_result_repository: LearningResultRepository,
                         persist_service: PersistService,
-                        export_service: ExportService,
+                        export_service: ExportService
     ):
         self.__student_repository = student_repository
         self.__learning_result_repository = learning_result_repository

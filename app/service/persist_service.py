@@ -5,7 +5,7 @@ from openpyxl.reader.excel import load_workbook
 from openpyxl.utils.cell import column_index_from_string
 from openpyxl.worksheet.worksheet import Worksheet
 
-from app.exception.custom_exc import InvalidMarkException
+from app.exception import InvalidMarkException
 from app.model import LearningResult, Student
 from app.repository import StudentRepository, LearningResultRepository
 from app.utils import make_student_slug
@@ -13,8 +13,8 @@ from app.utils import make_student_slug
 
 class PersistService:
     def __init__(self, student_repository: StudentRepository, learning_result_repository: LearningResultRepository):
-        self._student_repository = student_repository
-        self._learning_result_repository = learning_result_repository
+        self.__student_repository = student_repository
+        self.__learning_result_repository = learning_result_repository
 
     def import_workbook(self, file_path: str):
         wb = load_workbook(file_path, data_only=True)
@@ -48,7 +48,7 @@ class PersistService:
         while sheet.cell(row=current, column=column_index_from_string('A')).value:
             student_name = sheet.cell(current, column=column_index_from_string('B')).value
             student_slug = make_student_slug(class_code, student_name)
-            student_entity = self._student_repository.get_one_by_slug(student_slug)
+            student_entity = self.__student_repository.get_one_by_slug(student_slug)
             mark = self.__parse_mark(sheet.cell(row=current, column=column_index_from_string('D')).value)
             learning_result_list.append(LearningResult(
                 mark=mark,
@@ -63,9 +63,9 @@ class PersistService:
 
     def __import_sheet(self, sheet: Worksheet):
         student_list = self.__extract_sheet_student(sheet)
-        self._student_repository.upsert_multiple(student_list)
+        self.__student_repository.upsert_multiple(student_list)
         learning_result_list = self.__extract_sheet_learning_result(sheet)
-        self._learning_result_repository.create_multiple(learning_result_list)
+        self.__learning_result_repository.create_multiple(learning_result_list)
 
     @staticmethod
     def __map_grade(mark: float) -> str:

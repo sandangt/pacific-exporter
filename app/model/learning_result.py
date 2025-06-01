@@ -5,7 +5,7 @@ from sqlalchemy.orm.attributes import Mapped
 from sqlalchemy.sql.schema import ForeignKey
 from sqlalchemy.sql.sqltypes import String, UUID, Float, TEXT, Integer
 
-from app.model.base import BaseEntity
+from .base import BaseEntity
 
 
 class LearningResult(BaseEntity):
