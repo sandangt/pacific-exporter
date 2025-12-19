@@ -25,8 +25,9 @@ class MainWindow(QMainWindow):
             self.__c_main_widget.set_status('Processing')
             self.__process(event_val.input_dir, event_val.output_dir)
             self.__c_main_widget.set_status('DONE')
-        except Exception:
+        except Exception as ex:
             self.__c_main_widget.set_status('Cannot process due to error')
+            print(ex)
 
     def __process(self, input_dir: str, output_dir: str):
         target_files = []
