@@ -6,7 +6,7 @@ from pathlib import Path
 from PySide6.QtWidgets import QApplication
 
 from app.config import init_db_config, get_report_template
-from app.constant import TEMP_DIR
+from app.constant import TEMP_DIR, GIT_KEEP_FILE_NAME
 from app.model import BaseEntity
 from app.repository import StudentRepository, LearningResultRepository
 from app.service import PersistService, ExportService
@@ -39,7 +39,17 @@ def __init_context() -> ApplicationContext:
     )
 
 def __clean_up():
-    shutil.rmtree(Path(TEMP_DIR), ignore_errors=True)
+    tmp_dir = Path(TEMP_DIR)
+    if not tmp_dir.exists() or not tmp_dir.is_dir():
+        return
+    for item in tmp_dir.iterdir():
+        if item.name == GIT_KEEP_FILE_NAME:
+            continue
+        if item.is_dir():
+            shutil.rmtree(item)
+        else:
+            item.unlink()
+
 
 def start_app():
     app_ctx = __init_context()

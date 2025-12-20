@@ -6,7 +6,10 @@ a = Analysis(
     ['app/main/__main__.py'],
     pathex=[],
     binaries=[],
-    datas=[('resources', 'resources')],
+    datas=[
+      ('resources', 'resources'),
+      ('tmp', 'tmp')
+    ],
     hiddenimports=[
         'app',
         'app.main',

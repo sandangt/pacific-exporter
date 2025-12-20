@@ -52,7 +52,8 @@ class ExportService:
             program_manager=random.choice(PROGRAM_MANAGER)
         )
 
-    def __register_vietnamese_font(self):
+    @staticmethod
+    def __register_vietnamese_font():
         """Register a font that supports Vietnamese characters."""
         try:
             # Try to use DejaVu Sans (includes Vietnamese)
@@ -148,7 +149,6 @@ class ExportService:
 
             # Borders - simple black grid
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('LINEBELOW', (0, 0), (-1, 0), 2, colors.black),  # Thicker line under header
         ]))
         elements.append(table)
         elements.append(Spacer(1, 0.3 * inch))
