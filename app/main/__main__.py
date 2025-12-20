@@ -36,9 +36,19 @@ def __init_context() -> ApplicationContext:
         learning_result_repository=learning_result_repository,
         persist_service=persist_service,
         export_service=export_service,
+        db_engine=db_engine,
+        db_session=db_session
     )
 
-def __clean_up():
+def __clean_up(app_ctx: ApplicationContext):
+    try:
+        app_ctx.db_session.close_all()
+    except Exception:
+        pass
+    try:
+        app_ctx.db_engine.dispose()
+    except Exception:
+        pass
     tmp_dir = Path(TEMP_DIR)
     if not tmp_dir.exists() or not tmp_dir.is_dir():
         return
@@ -50,14 +60,13 @@ def __clean_up():
         else:
             item.unlink()
 
-
 def start_app():
     app_ctx = __init_context()
     app = QApplication(sys.argv)
     main_window = MainWindow(app_ctx)
     main_window.show()
     exit_code = app.exec()
-    __clean_up()
+    __clean_up(app_ctx)
     sys.exit(exit_code)
 
 if __name__ == '__main__':
