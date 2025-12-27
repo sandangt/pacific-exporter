@@ -15,5 +15,3 @@ class ReportInfo(BaseModel):
     marks: List[float]
     grades: List[str]
     comments: List[ReportComment]
-    program_manager: str
-    today: str
