@@ -1,3 +1,2 @@
 from .db import init_db_config
-from .report import get_report_template
-
+from .font import init_font_config

@@ -1,18 +1,18 @@
 import random
 from datetime import date
 from pathlib import Path
+from typing import List, Dict
 
-from jinja2 import Template
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
+from reportlab.pdfgen.canvas import Canvas
 from sqlalchemy import UUID
-from reportlab.lib.pagesizes import letter
+from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+from reportlab.lib.units import mm, cm
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Flowable, BaseDocTemplate
 from reportlab.lib import colors
 
-from app.constant import PROGRAM_MANAGER, FINAL_REPORT_NAME, FONT_DIR
+from app.constant import PROGRAM_MANAGER, FINAL_REPORT_NAME, REPORT_TITLE, CalibriFont, PROGRAM_MANAGER_TITLE, TODAY_STR
 from app.dto import PaginationParams, OrderByParams, ReportInfo, ReportComment
 from app.exception import ItemNotFoundException
 from app.repository import StudentRepository, LearningResultRepository
@@ -20,12 +20,39 @@ from app.repository import StudentRepository, LearningResultRepository
 
 class ExportService:
 
-    def __init__(self, student_repository: StudentRepository,
-                 learning_result_repository: LearningResultRepository, report_template: Template):
+    __FOOTER_PARAGRAPH_HEIGHT = 15*mm
+    __FOOTER_PARAGRAPH_WIDTH = 10*cm
+
+    def __init__(self,
+                student_repository: StudentRepository,
+                learning_result_repository: LearningResultRepository):
         self.__student_repository = student_repository
         self.__learning_result_repository = learning_result_repository
-        self.__report_template = report_template
-        self.__register_vietnamese_font()
+        self.__styles = self.__create_styles()
+        self.__table_styles = self.__create_table_styles()
+
+    def generate_report(self, output_dir: str):
+        """Generate PDF report for all students."""
+        output_path = Path(output_dir, FINAL_REPORT_NAME)
+        doc = SimpleDocTemplate(
+            str(output_path),
+            pagesize=A4,
+            rightMargin=12*mm,
+            leftMargin=12*mm,
+            topMargin=15*mm,
+            bottomMargin=15*mm,
+            title=REPORT_TITLE.capitalize()
+        )
+
+        elements = []
+        order_by = OrderByParams(order='class_code')
+        current_offset = 0
+        while students := self.__student_repository.get_all(PaginationParams(offset=current_offset, size=100), order_by):
+            for student in students:
+                report_info = self.__compile_report_context(student.id)
+                elements.extend(self.__build_report_elements(report_info))
+            current_offset += 100
+        doc.build(elements, onFirstPage=self.__add_footer, onLaterPages=self.__add_footer)
 
     def __compile_report_context(self, student_id: UUID) -> ReportInfo:
         student = self.__student_repository.get_one_by_id(student_id)
@@ -47,140 +74,158 @@ class ExportService:
             teachers=teachers,
             marks=marks,
             grades=grades,
-            comments=comments,
-            today=date.today().strftime("%B %d, %Y"),
-            program_manager=random.choice(PROGRAM_MANAGER)
+            comments=comments
         )
+
+    def __build_report_elements(self, report_info: ReportInfo) -> List[Flowable]:
+
+        title_text = REPORT_TITLE
+        subtitle_text = report_info.semester_title
+
+        table_data = [
+            ['SUBJECT'] + report_info.subjects,
+            ['TEACHER\'S NAME'] + report_info.teachers,
+            ['AVERAGE SCORES'] + [str(mark) for mark in report_info.marks],
+            ['GRADING'] + report_info.grades
+        ]
+        num_subjects = len(report_info.subjects)
+        available_width = A4[0] - 24*mm
+        first_col_width = 35*mm
+        remaining_width = available_width - first_col_width
+        subject_col_width = remaining_width / num_subjects if num_subjects > 0 else 30*mm
+        col_widths = [first_col_width] + [subject_col_width] * num_subjects
+        table = Table(table_data, colWidths=col_widths)
+        table.setStyle(self.__table_styles)
+
+        comment_section = []
+        if report_info.comments:
+            for comment in report_info.comments:
+                comment_section.extend([
+                    Paragraph(
+                        f'<b>* {comment.teacher}\'s comments:</b> <i>{comment.text}</i>', self.__styles['comment']
+                    ),
+                    Spacer(1, 2*mm),
+                ])
+
+        return [
+            Paragraph(title_text, self.__styles['title']),
+            Paragraph(subtitle_text, self.__styles['subtitle']),
+            Spacer(1, 10*mm),
+            Paragraph(f'Student\'s name: {report_info.student_name}', self.__styles['student_info']),
+            Paragraph(f'Class: {report_info.class_code}', self.__styles['student_info']),
+            Spacer(1, 5*mm),
+            table,
+            Spacer(1, 5*mm),
+            *comment_section,
+            PageBreak()
+        ]
+
+    def __add_footer(self, canvas: Canvas, doc: BaseDocTemplate):
+        canvas.saveState()
+        signature_start_x = doc.width - doc.rightMargin - 8*cm
+        p_datetime = Paragraph(f'<i>{TODAY_STR}</i>', self.__styles['footer'])
+        p_signature_name = Paragraph(f'<b>{random.choice(PROGRAM_MANAGER)}</b>', self.__styles['footer'])
+        p_signature_info = Paragraph(f'<b>{PROGRAM_MANAGER_TITLE}</b>', self.__styles['footer'])
+
+        p_datetime.wrap(self.__FOOTER_PARAGRAPH_WIDTH, self.__FOOTER_PARAGRAPH_HEIGHT)
+        p_signature_name.wrap(self.__FOOTER_PARAGRAPH_WIDTH, self.__FOOTER_PARAGRAPH_HEIGHT)
+        _, h_signature_info = p_signature_info.wrap(self.__FOOTER_PARAGRAPH_WIDTH, self.__FOOTER_PARAGRAPH_HEIGHT)
+
+        p_datetime.drawOn(canvas, signature_start_x, doc.bottomMargin + 5*cm)
+        p_signature_name.drawOn(canvas, signature_start_x, doc.bottomMargin+h_signature_info)
+        p_signature_info.drawOn(canvas, signature_start_x, doc.bottomMargin)
+        canvas.restoreState()
 
     @staticmethod
-    def __register_vietnamese_font():
-        """Register a font that supports Vietnamese characters."""
-        try:
-            # Try to use DejaVu Sans (includes Vietnamese)
-            # You'll need to include this font file in your project
-            font_path = Path(FONT_DIR, "DejaVuSans.ttf")
-            font_bold_path = Path(FONT_DIR, "DejaVuSans-bold.ttf")
-
-            if font_path.exists():
-                pdfmetrics.registerFont(TTFont('DejaVu', str(font_path)))
-            if font_bold_path.exists():
-                pdfmetrics.registerFont(TTFont('DejaVu-Bold', str(font_bold_path)))
-
-        except Exception as e:
-            print(f"Warning: Could not load custom font: {e}")
-            print("Falling back to default fonts (Vietnamese may not display correctly)")
+    def __create_styles() -> Dict[str, ParagraphStyle]:
+        sample_style = getSampleStyleSheet()
+        return {
+            'title': ParagraphStyle(
+                'Title',
+                parent=sample_style['Normal'],
+                fontName=CalibriFont.BOLD.font_name,
+                fontSize=23,
+                spaceAfter=0,
+                alignment=TA_CENTER,
+                textColor=colors.black,
+                leading=28
+            ),
+            'subtitle': ParagraphStyle(
+                'Subtitle',
+                parent=sample_style['Normal'],
+                fontName=CalibriFont.BOLD.font_name,
+                fontSize=15,
+                spaceAfter=0,
+                alignment=TA_CENTER,
+                textColor=colors.black,
+                leading=17
+            ),
+            'student_info': ParagraphStyle(
+                'StudentInfo',
+                parent=sample_style['Normal'],
+                fontName=CalibriFont.BOLD.font_name,
+                fontSize=14,
+                alignment=TA_LEFT,
+                textColor=colors.black,
+                leading=17,
+            ),
+            'comment': ParagraphStyle(
+                'Comment',
+                parent=sample_style['Normal'],
+                fontName=CalibriFont.REGULAR.font_name,
+                fontSize=14,
+                alignment=TA_JUSTIFY,
+                textColor=colors.black,
+                leading=17
+            ),
+            'footer': ParagraphStyle(
+                'Footer',
+                parent=sample_style['Normal'],
+                fontName=CalibriFont.REGULAR.font_name,
+                fontSize=14,
+                alignment=TA_CENTER,
+                textColor=colors.black,
+                leading=17
+            ),
+        }
 
     @staticmethod
-    def __build_report_elements(report_info: ReportInfo):
-        """Build reportlab elements for a single student report."""
-        styles = getSampleStyleSheet()
+    def __create_table_styles() -> TableStyle:
+        return TableStyle([
+            # First column (row headers) styling - 12pt, bold
+            ('FONTNAME', (0, 0), (0, -1), CalibriFont.BOLD.font_name),
+            ('FONTSIZE', (0, 0), (0, -1), 12),
 
-        # Create custom styles with Vietnamese font support
-        title_style = ParagraphStyle(
-            'Title',
-            parent=styles['Heading1'],
-            fontSize=16,
-            alignment=1,  # Center alignment
-            fontName='DejaVu-Bold',
-            spaceAfter=12
-        )
+            # First row (subject names) - 11pt in data cells
+            ('FONTNAME', (1, 0), (-1, 0), CalibriFont.BOLD.font_name),
+            ('FONTSIZE', (1, 0), (-1, 0), 11),
 
-        heading_style = ParagraphStyle(
-            'CustomHeading',
-            parent=styles['Heading2'],
-            fontName='DejaVu-Bold',
-            fontSize=14
-        )
+            # Teacher names row - 11pt
+            ('FONTNAME', (1, 1), (-1, 1), CalibriFont.REGULAR.font_name),
+            ('FONTSIZE', (1, 1), (-1, 1), 11),
 
-        normal_style = ParagraphStyle(
-            'CustomNormal',
-            parent=styles['Normal'],
-            fontName='DejaVu',
-            fontSize=11
-        )
+            # Average scores row - 13.5pt, bold
+            ('FONTNAME', (1, 2), (-1, 2), CalibriFont.BOLD.font_name),
+            ('FONTSIZE', (1, 2), (-1, 2), 13.5),
 
-        bold_normal_style = ParagraphStyle(
-            'BoldNormal',
-            parent=normal_style,
-            fontName='DejaVu-Bold'
-        )
+            # Grading row - 13.5pt, bold
+            ('FONTNAME', (1, 3), (-1, 3), CalibriFont.BOLD.font_name),
+            ('FONTSIZE', (1, 3), (-1, 3), 13.5),
 
-        elements = []
+            # Base padding for all cells
+            ('LEFTPADDING', (0, 0), (-1, -1), 2*mm),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 2*mm),
 
-        # Title
-        elements.append(Paragraph(f"{report_info.semester_title} - Academic Report", title_style))
-        elements.append(Spacer(1, 0.3 * inch))
-
-        # Student Info
-        elements.append(Paragraph(f"<b>Student:</b> {report_info.student_name}", normal_style))
-        elements.append(Paragraph(f"<b>Class:</b> {report_info.class_code}", normal_style))
-        elements.append(Spacer(1, 0.2 * inch))
-
-        # Results Table
-        elements.append(Paragraph("Learning Results", heading_style))
-        elements.append(Spacer(1, 0.1 * inch))
-
-        table_data = [['Subject', 'Teacher', 'Mark', 'Grade']]
-        for i in range(len(report_info.subjects)):
-            table_data.append([
-                report_info.subjects[i],
-                report_info.teachers[i],
-                str(report_info.marks[i]),
-                report_info.grades[i]
-            ])
-
-        table = Table(table_data, colWidths=[2.5 * inch, 2 * inch, 1 * inch, 1 * inch])
-        table.setStyle(TableStyle([
-            # Header row styling
-            ('FONTNAME', (0, 0), (-1, 0), 'DejaVu-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 11),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
-            ('TOPPADDING', (0, 0), (-1, 0), 8),
-
-            # Data rows styling
-            ('FONTNAME', (0, 1), (-1, -1), 'DejaVu'),
-            ('FONTSIZE', (0, 1), (-1, -1), 10),
-            ('TOPPADDING', (0, 1), (-1, -1), 6),
-            ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+            # Vertical padding - more for rows with larger font sizes
+            ('TOPPADDING', (0, 0), (-1, 1), 2*mm),
+            ('BOTTOMPADDING', (0, 0), (-1, 1), 2*mm),
+            ('TOPPADDING', (0, 2), (-1, -1), 2.5*mm),
+            ('BOTTOMPADDING', (0, 2), (-1, -1), 3.5*mm),
 
             # Alignment
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
 
-            # Borders - simple black grid
+            # Borders - solid black grid
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ]))
-        elements.append(table)
-        elements.append(Spacer(1, 0.3 * inch))
-
-        # Comments section
-        if report_info.comments:
-            elements.append(Paragraph("Teacher Comments", heading_style))
-            elements.append(Spacer(1, 0.1 * inch))
-            for comment in report_info.comments:
-                elements.append(Paragraph(f"<b>{comment.teacher}:</b> {comment.text}", normal_style))
-                elements.append(Spacer(1, 0.1 * inch))
-
-        # Footer
-        elements.append(Spacer(1, 0.3 * inch))
-        elements.append(Paragraph(f"<i>Generated on {report_info.today}</i>", normal_style))
-        elements.append(Paragraph(f"<i>Program Manager: {report_info.program_manager}</i>", normal_style))
-        elements.append(PageBreak())
-        return elements
-
-    def generate_report(self, output_dir: str):
-        output_path = Path(output_dir, FINAL_REPORT_NAME)
-        doc = SimpleDocTemplate(str(output_path), pagesize=letter)
-        elements = []
-
-        order_by = OrderByParams(order='class_code')
-        current_offset = 0
-
-        while students := self.__student_repository.get_all(
-            PaginationParams(offset=current_offset, size=100), order_by):
-            for student in students:
-                report_info = self.__compile_report_context(student.id)
-                elements.extend(self.__build_report_elements(report_info))
-            current_offset += 1
-
-        doc.build(elements)
+        ])

@@ -1,4 +1,3 @@
-
 import json
 from typing import Optional, Tuple, Any, List
 from uuid import UUID
@@ -14,7 +13,7 @@ class PaginationParams(BaseModel):
 
     @model_serializer
     def serialize(self) -> Tuple[int, int]:
-        return self.offset or 0, self.size or self.DEFAULT_PAGE_SIZE
+        return self.offset or 0, self.size or self.__DEFAULT_PAGE_SIZE
 
 
 class OrderByParams(BaseModel):
