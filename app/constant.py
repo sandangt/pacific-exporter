@@ -22,11 +22,13 @@ DB_FILE_PATH = str(Path(TEMP_DIR, 'data.db'))
 FONT_DIR = str(Path(RESOURCE_DIR, 'fonts'))
 TEXT_REPORT_FILE_PATH = str(Path(TEMP_DIR, 'text-report.txt'))
 FINAL_REPORT_NAME = 'report.pdf'
-PROGRAM_MANAGER = ['Bad Bunny', 'Chủ Tịch Gà Bông', 'Công Chúa 0 Giờ', 'Hoa Hậu xã', 'Giám Đốc Làng Vũ Đại']
+PROGRAM_MANAGER = ['Bad Bunny', 'Chủ Tịch Gà Bông', 'Công Chúa 0 Giờ', 'Hoa Hậu Xã', 'Phó Giám Đốc Động Bàn Tơ',
+                   'Nữ Hoàng Miếng Dán Tai Thỏ', 'Y Tá Chăm Chỉ']
 GIT_KEEP_FILE_NAME = '.gitkeep'
 REPORT_TITLE = 'BILINGUAL PROGRAM REPORT'
 PROGRAM_MANAGER_TITLE = 'ENGLISH BILINGUAL PROGRAM MANAGER'
 TODAY_STR = date.today().strftime("%B %d, %Y")
+MAX_INTEGER = sys.maxsize
 
 class CalibriFont(Enum):
     REGULAR = ('Calibri', 'regular', Path(FONT_DIR, 'calibri-regular.ttf'))
@@ -57,3 +59,13 @@ class CalibriFont(Enum):
 
     def path_exists(self) -> bool:
         return self.__path.exists()
+
+SUBJECT_RANKING_MAP = {
+    'english': 1,
+    'maths': 2,
+    'music': 3,
+    'drama': 4,
+    'science': 5,
+    'world-culture': 6,
+    'lt-cambridge': 7,
+}

@@ -1,5 +1,5 @@
 import uuid
-from typing import Set
+from typing import List
 
 from sqlalchemy.orm import mapped_column, relationship
 from sqlalchemy.orm.attributes import Mapped
@@ -17,4 +17,4 @@ class Student(BaseEntity):
     semester_title = mapped_column(String, nullable=True)
     no_in_class = mapped_column(Integer, nullable=True)
 
-    learning_results: Mapped[Set['LearningResult']] = relationship(back_populates='student', lazy='joined')
+    learning_results: Mapped[List['LearningResult']] = relationship(back_populates='student', lazy='joined', order_by='LearningResult.subject_rank.asc()')

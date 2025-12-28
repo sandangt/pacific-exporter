@@ -4,7 +4,9 @@ from typing import List, Any
 from openpyxl.reader.excel import load_workbook
 from openpyxl.utils.cell import column_index_from_string
 from openpyxl.worksheet.worksheet import Worksheet
+from slugify import slugify
 
+from app.constant import SUBJECT_RANKING_MAP, MAX_INTEGER
 from app.exception import InvalidMarkException
 from app.model import LearningResult, Student
 from app.repository import StudentRepository, LearningResultRepository
@@ -42,6 +44,8 @@ class PersistService:
     def __extract_sheet_learning_result(self, sheet: Worksheet) -> List[LearningResult]:
         teacher_name = self.__parse_teacher(sheet.cell(row=2, column=column_index_from_string('C')).value)
         subject_name = self.__parse_subject(sheet.cell(row=2, column=column_index_from_string('A')).value)
+        subject_slug = slugify(subject_name)
+        subject_rank = SUBJECT_RANKING_MAP.get(subject_slug, MAX_INTEGER)
         class_code = sheet.title
         learning_result_list = []
         current = 4
@@ -56,7 +60,9 @@ class PersistService:
                 teacher_name=teacher_name,
                 subject=subject_name,
                 comment=sheet.cell(row=current, column=column_index_from_string('E')).value,
-                student_id=student_entity.id
+                student_id=student_entity.id,
+                subject_slug=subject_slug,
+                subject_rank=subject_rank,
             ))
             current += 1
         return learning_result_list

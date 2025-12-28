@@ -1,9 +1,8 @@
 import random
-from datetime import date
 from pathlib import Path
 from typing import List, Dict
 
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
 from reportlab.pdfgen.canvas import Canvas
 from sqlalchemy import UUID
 from reportlab.lib.pagesizes import A4
@@ -39,19 +38,19 @@ class ExportService:
             pagesize=A4,
             rightMargin=12*mm,
             leftMargin=12*mm,
-            topMargin=15*mm,
+            topMargin=23*mm,
             bottomMargin=15*mm,
             title=REPORT_TITLE.capitalize()
         )
 
         elements = []
         order_by = OrderByParams(order='class_code')
-        current_offset = 0
-        while students := self.__student_repository.get_all(PaginationParams(offset=current_offset, size=100), order_by):
+        current_page = 0
+        while students := self.__student_repository.get_all(PaginationParams(offset=current_page, size=100), order_by):
             for student in students:
                 report_info = self.__compile_report_context(student.id)
                 elements.extend(self.__build_report_elements(report_info))
-            current_offset += 100
+            current_page += 1
         doc.build(elements, onFirstPage=self.__add_footer, onLaterPages=self.__add_footer)
 
     def __compile_report_context(self, student_id: UUID) -> ReportInfo:
@@ -83,16 +82,23 @@ class ExportService:
         subtitle_text = report_info.semester_title
 
         table_data = [
-            ['SUBJECT'] + report_info.subjects,
-            ['TEACHER\'S NAME'] + report_info.teachers,
-            ['AVERAGE SCORES'] + [str(mark) for mark in report_info.marks],
-            ['GRADING'] + report_info.grades
+            [Paragraph('SUBJECT', self.__styles['table_column_headers'])] +
+            [Paragraph(subject, self.__styles['table_row_subject_name']) for subject in report_info.subjects],
+
+            [Paragraph('TEACHER\'S NAME', self.__styles['table_column_headers'])] +
+            [Paragraph(teacher, self.__styles['table_row_teacher_name']) for teacher in report_info.teachers],
+
+            [Paragraph('AVERAGE SCORES', self.__styles['table_column_headers'])] +
+            [Paragraph(str(mark), self.__styles['table_row_mark']) for mark in report_info.marks],
+
+            [Paragraph('GRADING', self.__styles['table_column_headers'])] +
+            [Paragraph(grade, self.__styles['table_row_mark']) for grade in report_info.grades]
         ]
         num_subjects = len(report_info.subjects)
         available_width = A4[0] - 24*mm
         first_col_width = 35*mm
         remaining_width = available_width - first_col_width
-        subject_col_width = remaining_width / num_subjects if num_subjects > 0 else 30*mm
+        subject_col_width = max(remaining_width / num_subjects if num_subjects > 0 else 30*mm, 23*mm)
         col_widths = [first_col_width] + [subject_col_width] * num_subjects
         table = Table(table_data, colWidths=col_widths)
         table.setStyle(self.__table_styles)
@@ -131,7 +137,7 @@ class ExportService:
         p_signature_name.wrap(self.__FOOTER_PARAGRAPH_WIDTH, self.__FOOTER_PARAGRAPH_HEIGHT)
         _, h_signature_info = p_signature_info.wrap(self.__FOOTER_PARAGRAPH_WIDTH, self.__FOOTER_PARAGRAPH_HEIGHT)
 
-        p_datetime.drawOn(canvas, signature_start_x, doc.bottomMargin + 5*cm)
+        p_datetime.drawOn(canvas, signature_start_x, doc.bottomMargin + 4*cm)
         p_signature_name.drawOn(canvas, signature_start_x, doc.bottomMargin+h_signature_info)
         p_signature_info.drawOn(canvas, signature_start_x, doc.bottomMargin)
         canvas.restoreState()
@@ -169,6 +175,38 @@ class ExportService:
                 textColor=colors.black,
                 leading=17,
             ),
+            'table_column_headers': ParagraphStyle(
+                'TableColumnHeaders',
+                parent=sample_style['Normal'],
+                fontName=CalibriFont.BOLD.font_name,
+                fontSize=10,
+                alignment=TA_CENTER,
+                textColor=colors.black,
+            ),
+            'table_row_subject_name': ParagraphStyle(
+                'TableRowSubjectName',
+                parent=sample_style['Normal'],
+                fontName=CalibriFont.BOLD.font_name,
+                fontSize=10,
+                alignment=TA_CENTER,
+                textColor=colors.black,
+            ),
+            'table_row_teacher_name': ParagraphStyle(
+                'TableRowTeacherName',
+                parent=sample_style['Normal'],
+                fontName=CalibriFont.REGULAR.font_name,
+                fontSize=11,
+                alignment=TA_CENTER,
+                textColor=colors.black,
+            ),
+            'table_row_mark': ParagraphStyle(
+                'TableRowMark',
+                parent=sample_style['Normal'],
+                fontName=CalibriFont.BOLD.font_name,
+                fontSize=13.5,
+                alignment=TA_CENTER,
+                textColor=colors.black,
+            ),
             'comment': ParagraphStyle(
                 'Comment',
                 parent=sample_style['Normal'],
@@ -192,26 +230,6 @@ class ExportService:
     @staticmethod
     def __create_table_styles() -> TableStyle:
         return TableStyle([
-            # First column (row headers) styling - 12pt, bold
-            ('FONTNAME', (0, 0), (0, -1), CalibriFont.BOLD.font_name),
-            ('FONTSIZE', (0, 0), (0, -1), 12),
-
-            # First row (subject names) - 11pt in data cells
-            ('FONTNAME', (1, 0), (-1, 0), CalibriFont.BOLD.font_name),
-            ('FONTSIZE', (1, 0), (-1, 0), 11),
-
-            # Teacher names row - 11pt
-            ('FONTNAME', (1, 1), (-1, 1), CalibriFont.REGULAR.font_name),
-            ('FONTSIZE', (1, 1), (-1, 1), 11),
-
-            # Average scores row - 13.5pt, bold
-            ('FONTNAME', (1, 2), (-1, 2), CalibriFont.BOLD.font_name),
-            ('FONTSIZE', (1, 2), (-1, 2), 13.5),
-
-            # Grading row - 13.5pt, bold
-            ('FONTNAME', (1, 3), (-1, 3), CalibriFont.BOLD.font_name),
-            ('FONTSIZE', (1, 3), (-1, 3), 13.5),
-
             # Base padding for all cells
             ('LEFTPADDING', (0, 0), (-1, -1), 2*mm),
             ('RIGHTPADDING', (0, 0), (-1, -1), 2*mm),
