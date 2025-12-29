@@ -23,7 +23,7 @@ FONT_DIR = str(Path(RESOURCE_DIR, 'fonts'))
 TEXT_REPORT_FILE_PATH = str(Path(TEMP_DIR, 'text-report.txt'))
 FINAL_REPORT_NAME = 'report.pdf'
 PROGRAM_MANAGER = ['Bad Bunny', 'Chủ Tịch Gà Bông', 'Công Chúa 0 Giờ', 'Hoa Hậu Xã', 'Phó Giám Đốc Động Bàn Tơ',
-                   'Nữ Hoàng Miếng Dán Tai Thỏ', 'Y Tá Chăm Chỉ']
+                   'Nữ Hoàng Miếng Dán Tai Thỏ', 'Y Tá Chăm Chỉ', 'Cô Giáo Thảo']
 GIT_KEEP_FILE_NAME = '.gitkeep'
 REPORT_TITLE = 'BILINGUAL PROGRAM REPORT'
 PROGRAM_MANAGER_TITLE = 'ENGLISH BILINGUAL PROGRAM MANAGER'

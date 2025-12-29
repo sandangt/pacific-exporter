@@ -49,9 +49,9 @@ class ExportService:
         while students := self.__student_repository.get_all(PaginationParams(offset=current_page, size=100), order_by):
             for student in students:
                 report_info = self.__compile_report_context(student.id)
-                elements.extend(self.__build_report_elements(report_info))
+                elements.extend(self.__build_report_elements(report_info, doc))
             current_page += 1
-        doc.build(elements, onFirstPage=self.__add_footer, onLaterPages=self.__add_footer)
+        doc.build(elements, onFirstPage=self.__build_footer, onLaterPages=self.__build_footer)
 
     def __compile_report_context(self, student_id: UUID) -> ReportInfo:
         student = self.__student_repository.get_one_by_id(student_id)
@@ -76,11 +76,33 @@ class ExportService:
             comments=comments
         )
 
-    def __build_report_elements(self, report_info: ReportInfo) -> List[Flowable]:
+    def __build_report_elements(self, report_info: ReportInfo, doc: BaseDocTemplate) -> List[Flowable]:
 
-        title_text = REPORT_TITLE
-        subtitle_text = report_info.semester_title
+        title_text = Paragraph(REPORT_TITLE, self.__styles['title'])
+        subtitle_text = Paragraph(report_info.semester_title, self.__styles['subtitle'])
+        student_info = self.__build_student_info_section(report_info)
+        table = self.__build_table_section(report_info, doc)
+        comment_section = self.__build_comment_section(report_info)
 
+        return [
+            title_text,
+            subtitle_text,
+            Spacer(1, 10*mm),
+            *student_info,
+            Spacer(1, 5*mm),
+            table,
+            Spacer(1, 5*mm),
+            *comment_section,
+            PageBreak()
+        ]
+
+    def __build_student_info_section(self, report_info: ReportInfo) -> List[Flowable]:
+        return [
+            Paragraph(f'Student\'s name: {report_info.student_name}', self.__styles['student_info']),
+            Paragraph(f'Class: {report_info.class_code}', self.__styles['student_info']),
+        ]
+
+    def __build_table_section(self, report_info: ReportInfo, doc: BaseDocTemplate) -> Flowable:
         table_data = [
             [Paragraph('SUBJECT', self.__styles['table_column_headers'])] +
             [Paragraph(subject, self.__styles['table_row_subject_name']) for subject in report_info.subjects],
@@ -95,14 +117,19 @@ class ExportService:
             [Paragraph(grade, self.__styles['table_row_mark']) for grade in report_info.grades]
         ]
         num_subjects = len(report_info.subjects)
-        available_width = A4[0] - 24*mm
-        first_col_width = 35*mm
-        remaining_width = available_width - first_col_width
-        subject_col_width = max(remaining_width / num_subjects if num_subjects > 0 else 30*mm, 23*mm)
-        col_widths = [first_col_width] + [subject_col_width] * num_subjects
+        available_width = A4[0] - (doc.rightMargin + doc.leftMargin)
+        first_col_min_width = 26 * mm
+        if (available_width / (num_subjects + 1)) > first_col_min_width:
+            col_widths = [available_width / (num_subjects + 1)] * (num_subjects + 1)
+        else:
+            remaining_width = available_width - first_col_min_width
+            subject_col_width = max(remaining_width / num_subjects if num_subjects > 0 else 30 * mm, 24.5 * mm)
+            col_widths = [first_col_min_width] + [subject_col_width] * num_subjects
         table = Table(table_data, colWidths=col_widths)
         table.setStyle(self.__table_styles)
+        return table
 
+    def __build_comment_section(self, report_info: ReportInfo) -> List[Flowable]:
         comment_section = []
         if report_info.comments:
             for comment in report_info.comments:
@@ -112,21 +139,9 @@ class ExportService:
                     ),
                     Spacer(1, 2*mm),
                 ])
+        return comment_section
 
-        return [
-            Paragraph(title_text, self.__styles['title']),
-            Paragraph(subtitle_text, self.__styles['subtitle']),
-            Spacer(1, 10*mm),
-            Paragraph(f'Student\'s name: {report_info.student_name}', self.__styles['student_info']),
-            Paragraph(f'Class: {report_info.class_code}', self.__styles['student_info']),
-            Spacer(1, 5*mm),
-            table,
-            Spacer(1, 5*mm),
-            *comment_section,
-            PageBreak()
-        ]
-
-    def __add_footer(self, canvas: Canvas, doc: BaseDocTemplate):
+    def __build_footer(self, canvas: Canvas, doc: BaseDocTemplate):
         canvas.saveState()
         signature_start_x = doc.width - doc.rightMargin - 8*cm
         p_datetime = Paragraph(f'<i>{TODAY_STR}</i>', self.__styles['footer'])
@@ -179,7 +194,7 @@ class ExportService:
                 'TableColumnHeaders',
                 parent=sample_style['Normal'],
                 fontName=CalibriFont.BOLD.font_name,
-                fontSize=10,
+                fontSize=11,
                 alignment=TA_CENTER,
                 textColor=colors.black,
             ),
@@ -187,7 +202,7 @@ class ExportService:
                 'TableRowSubjectName',
                 parent=sample_style['Normal'],
                 fontName=CalibriFont.BOLD.font_name,
-                fontSize=10,
+                fontSize=11,
                 alignment=TA_CENTER,
                 textColor=colors.black,
             ),
