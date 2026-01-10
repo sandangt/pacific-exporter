@@ -22,12 +22,13 @@ DB_FILE_PATH = str(Path(TEMP_DIR, 'data.db'))
 FONT_DIR = str(Path(RESOURCE_DIR, 'fonts'))
 TEXT_REPORT_FILE_PATH = str(Path(TEMP_DIR, 'text-report.txt'))
 FINAL_REPORT_NAME = 'report.pdf'
-PROGRAM_MANAGER = ['Bad Bunny', 'Chủ Tịch Gà Bông', 'Công Chúa 0 Giờ', 'Hoa Hậu Xã', 'Phó Giám Đốc Động Bàn Tơ',
-                   'Nữ Hoàng Miếng Dán Tai Thỏ', 'Y Tá Chăm Chỉ', 'Cô Giáo Thảo']
+# PROGRAM_MANAGER = ['Bad Bunny', 'Chủ Tịch Gà Bông', 'Công Chúa 0 Giờ', 'Hoa Hậu Xã', 'Phó Giám Đốc Động Bàn Tơ',
+#                    'Nữ Hoàng Miếng Dán Tai Thỏ', 'Y Tá Chăm Chỉ', 'Cô Giáo Thảo']
 GIT_KEEP_FILE_NAME = '.gitkeep'
 REPORT_TITLE = 'BILINGUAL PROGRAM REPORT'
 PROGRAM_MANAGER_TITLE = 'ENGLISH BILINGUAL PROGRAM MANAGER'
-TODAY_STR = date.today().strftime("%B %d, %Y")
+# TODAY_STR = date.today().strftime("%B %d, %Y")
+TODAY_STR = date(2026,1,20).strftime("%B %d, %Y")
 MAX_INTEGER = sys.maxsize
 
 class CalibriFont(Enum):

@@ -11,9 +11,10 @@ from reportlab.lib.units import mm, cm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Flowable, BaseDocTemplate
 from reportlab.lib import colors
 
-from app.constant import PROGRAM_MANAGER, FINAL_REPORT_NAME, REPORT_TITLE, CalibriFont, PROGRAM_MANAGER_TITLE, TODAY_STR
+from app.constant import FINAL_REPORT_NAME, REPORT_TITLE, CalibriFont, PROGRAM_MANAGER_TITLE, TODAY_STR
 from app.dto import PaginationParams, OrderByParams, ReportInfo, ReportComment
 from app.exception import ItemNotFoundException
+from app.generated_constant import PROGRAM_MANAGER
 from app.repository import StudentRepository, LearningResultRepository
 
 
@@ -145,8 +146,8 @@ class ExportService:
         canvas.saveState()
         signature_start_x = doc.width - doc.rightMargin - 8*cm
         p_datetime = Paragraph(f'<i>{TODAY_STR}</i>', self.__styles['footer'])
-        p_signature_name = Paragraph(f'<b>{random.choice(PROGRAM_MANAGER)}</b>', self.__styles['footer'])
-        p_signature_info = Paragraph(f'<b>{PROGRAM_MANAGER_TITLE}</b>', self.__styles['footer'])
+        p_signature_name = Paragraph(f'<b>{PROGRAM_MANAGER.upper()}</b>', self.__styles['footer'])
+        p_signature_info = Paragraph(f'<b>{PROGRAM_MANAGER_TITLE.upper()}</b>', self.__styles['footer'])
 
         p_datetime.wrap(self.__FOOTER_PARAGRAPH_WIDTH, self.__FOOTER_PARAGRAPH_HEIGHT)
         p_signature_name.wrap(self.__FOOTER_PARAGRAPH_WIDTH, self.__FOOTER_PARAGRAPH_HEIGHT)
