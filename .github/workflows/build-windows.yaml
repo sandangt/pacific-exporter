@@ -16,6 +16,7 @@ jobs:
     runs-on: windows-latest
     env:
       PROGRAM_MANAGER: ${{ secrets.PROGRAM_MANAGER }}
+      SIGNING_DATE: ${{ vars.SIGNING_DATE }}
 
     steps:
       - name: Checkout code at master branch
@@ -44,6 +45,7 @@ jobs:
       - name: Generate embedded config
         run: |
           echo "PROGRAM_MANAGER = '${{ secrets.PROGRAM_MANAGER }}'" > app/generated_constant.py
+          echo "SIGNING_DATE = '${{ vars.SIGNING_DATE }}'" >> app/generated_constant.py
         shell: pwsh
 
       - name: Install project dependencies with poetry

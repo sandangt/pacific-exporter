@@ -11,10 +11,10 @@ from reportlab.lib.units import mm, cm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Flowable, BaseDocTemplate
 from reportlab.lib import colors
 
-from app.constant import FINAL_REPORT_NAME, REPORT_TITLE, CalibriFont, PROGRAM_MANAGER_TITLE, TODAY_STR
+from app.constant import FINAL_REPORT_NAME, REPORT_TITLE, CalibriFont, PROGRAM_MANAGER_TITLE
 from app.dto import PaginationParams, OrderByParams, ReportInfo, ReportComment
 from app.exception import ItemNotFoundException
-from app.generated_constant import PROGRAM_MANAGER
+from app.generated_constant import PROGRAM_MANAGER, SIGNING_DATE
 from app.repository import StudentRepository, LearningResultRepository
 
 
@@ -119,12 +119,12 @@ class ExportService:
         ]
         num_subjects = len(report_info.subjects)
         available_width = A4[0] - (doc.rightMargin + doc.leftMargin)
-        first_col_min_width = 26 * mm
+        first_col_min_width = 25*mm
         if (available_width / (num_subjects + 1)) > first_col_min_width:
             col_widths = [available_width / (num_subjects + 1)] * (num_subjects + 1)
         else:
             remaining_width = available_width - first_col_min_width
-            subject_col_width = max(remaining_width / num_subjects if num_subjects > 0 else 30 * mm, 24.5 * mm)
+            subject_col_width = max(remaining_width / num_subjects if num_subjects > 0 else 30*mm, 24.5*mm)
             col_widths = [first_col_min_width] + [subject_col_width] * num_subjects
         table = Table(table_data, colWidths=col_widths)
         table.setStyle(self.__table_styles)
@@ -145,8 +145,8 @@ class ExportService:
     def __build_footer(self, canvas: Canvas, doc: BaseDocTemplate):
         canvas.saveState()
         signature_start_x = doc.width - doc.rightMargin - 8*cm
-        p_datetime = Paragraph(f'<i>{TODAY_STR}</i>', self.__styles['footer'])
-        p_signature_name = Paragraph(f'<b>{PROGRAM_MANAGER.upper()}</b>', self.__styles['footer'])
+        p_datetime = Paragraph(f'<i>{SIGNING_DATE}</i>', self.__styles['footer'])
+        p_signature_name = Paragraph(f'<b>{PROGRAM_MANAGER.title()}</b>', self.__styles['footer'])
         p_signature_info = Paragraph(f'<b>{PROGRAM_MANAGER_TITLE.upper()}</b>', self.__styles['footer'])
 
         p_datetime.wrap(self.__FOOTER_PARAGRAPH_WIDTH, self.__FOOTER_PARAGRAPH_HEIGHT)
@@ -219,7 +219,7 @@ class ExportService:
                 'TableRowMark',
                 parent=sample_style['Normal'],
                 fontName=CalibriFont.BOLD.font_name,
-                fontSize=13.5,
+                fontSize=12.5,
                 alignment=TA_CENTER,
                 textColor=colors.black,
             ),

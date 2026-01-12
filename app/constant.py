@@ -28,7 +28,6 @@ GIT_KEEP_FILE_NAME = '.gitkeep'
 REPORT_TITLE = 'BILINGUAL PROGRAM REPORT'
 PROGRAM_MANAGER_TITLE = 'ENGLISH BILINGUAL PROGRAM MANAGER'
 # TODAY_STR = date.today().strftime("%B %d, %Y")
-TODAY_STR = date(2026,1,20).strftime("%B %d, %Y")
 MAX_INTEGER = sys.maxsize
 
 class CalibriFont(Enum):
