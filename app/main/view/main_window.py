@@ -23,16 +23,16 @@ class MainWindow(QMainWindow):
 
         try:
             self.__c_main_widget.set_status('Processing')
-            self.__process(event_val.input_dir, event_val.output_dir)
+            self.__process(event_val)
             self.__c_main_widget.set_status('DONE')
         except Exception as ex:
             self.__c_main_widget.set_status('Cannot process due to error')
             print(ex)
 
-    def __process(self, input_dir: str, output_dir: str):
+    def __process(self, event_val: SubmitEventInfo):
         target_files = []
-        for root, _, files in os.walk(input_dir):
+        for root, _, files in os.walk(event_val.input_dir):
             target_files.extend([os.path.join(root, x) for x in files if x.endswith(XLSX_EXTENSION)])
         for file_path in target_files:
             self.__app_ctx.persist_service.import_workbook(file_path)
-        self.__app_ctx.export_service.generate_report(output_dir)
+        self.__app_ctx.export_service.generate_report(event_val.output_dir, event_val.signing_date)

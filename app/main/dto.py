@@ -43,5 +43,6 @@ class ApplicationContext:
 class SubmitEventInfo(BaseModel):
     input_dir: Optional[str]
     output_dir: Optional[str]
+    signing_date: Optional[str]
     ready_to_start: Optional[bool] = False
     err_msg: Optional[str] = None

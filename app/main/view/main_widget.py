@@ -1,5 +1,5 @@
-from PySide6.QtCore import Signal, Qt
-from PySide6.QtWidgets import QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QLabel, QFileDialog
+from PySide6.QtCore import Signal, Qt, QDate
+from PySide6.QtWidgets import QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QLabel, QFileDialog, QDateEdit
 
 from app.main.dto import SubmitEventInfo
 
@@ -41,6 +41,16 @@ class MainWidget(QWidget):
         main_layout.addLayout(output_layout)
         #endregion
 
+        #region Signing date
+        signing_date_layout = QHBoxLayout()
+        self.__c_signing_date = QDateEdit(QDate().currentDate())
+        self.__c_signing_date.setMinimumWidth(300)
+        self.__c_signing_date.setDisplayFormat('dd-MM-yyyy')
+        self.__c_signing_date.setCalendarPopup(True)
+        signing_date_layout.addWidget(self.__c_signing_date)
+        main_layout.addLayout(signing_date_layout)
+        #endregion
+
         #region Submit button
         self.start_button = QPushButton('Start')
         self.start_button.setMinimumHeight(40)
@@ -66,9 +76,11 @@ class MainWidget(QWidget):
     def __eh_on_submit(self):
         input_dir = self.__c_input_file_path.text().strip()
         output_dir = self.__c_output_file_path.text().strip()
+        signing_date = self.__c_signing_date.date().toString('MMMM dd, yyyy').strip()
 
         result = SubmitEventInfo(input_dir=input_dir,
-                                 output_dir=output_dir)
+                                 output_dir=output_dir,
+                                 signing_date=signing_date)
 
         if not input_dir or input_dir == self.__NO_DIR_SELECTED_LABEL:
             result.ready_to_start = False

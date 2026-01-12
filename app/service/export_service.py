@@ -11,10 +11,10 @@ from reportlab.lib.units import mm, cm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Flowable, BaseDocTemplate
 from reportlab.lib import colors
 
-from app.constant import FINAL_REPORT_NAME, REPORT_TITLE, CalibriFont, PROGRAM_MANAGER_TITLE
+from app.constant import FINAL_REPORT_NAME, REPORT_TITLE, CalibriFont, PROGRAM_MANAGER_TITLE, TODAY_STR
 from app.dto import PaginationParams, OrderByParams, ReportInfo, ReportComment
 from app.exception import ItemNotFoundException
-from app.generated_constant import PROGRAM_MANAGER, SIGNING_DATE
+from app.generated_constant import PROGRAM_MANAGER
 from app.repository import StudentRepository, LearningResultRepository
 
 
@@ -28,12 +28,15 @@ class ExportService:
                 learning_result_repository: LearningResultRepository):
         self.__student_repository = student_repository
         self.__learning_result_repository = learning_result_repository
+        self.__signing_date = TODAY_STR
         self.__styles = self.__create_styles()
         self.__table_styles = self.__create_table_styles()
 
-    def generate_report(self, output_dir: str):
+    def generate_report(self, output_dir: str, signing_date: str):
         """Generate PDF report for all students."""
         output_path = Path(output_dir, FINAL_REPORT_NAME)
+        if signing_date:
+            self.__signing_date = signing_date
         doc = SimpleDocTemplate(
             str(output_path),
             pagesize=A4,
@@ -145,7 +148,7 @@ class ExportService:
     def __build_footer(self, canvas: Canvas, doc: BaseDocTemplate):
         canvas.saveState()
         signature_start_x = doc.width - doc.rightMargin - 8*cm
-        p_datetime = Paragraph(f'<i>{SIGNING_DATE}</i>', self.__styles['footer'])
+        p_datetime = Paragraph(f'<i>{self.__signing_date}</i>', self.__styles['footer'])
         p_signature_name = Paragraph(f'<b>{PROGRAM_MANAGER.title()}</b>', self.__styles['footer'])
         p_signature_info = Paragraph(f'<b>{PROGRAM_MANAGER_TITLE.upper()}</b>', self.__styles['footer'])
 
